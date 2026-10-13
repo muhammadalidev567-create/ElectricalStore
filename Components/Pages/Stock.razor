@@ -1,0 +1,33 @@
+@page "/stock"
+@inject StockService StockService
+
+<PageTitle>Stock In</PageTitle>
+
+<div class="page-heading"><div><h1>Stock In</h1><p>Receive new electrical stock and keep supplier records organized.</p></div></div>
+
+<div class="form-card">
+    <div class="section-title">Receive stock</div>
+    <EditForm Model="form" OnValidSubmit="Save"><DataAnnotationsValidator />
+        <div class="row g-3">
+            <div class="col-lg-4"><label class="form-label">PRODUCT</label><InputSelect class="form-select" @bind-Value="form.ProductId"><option value="0">Select product</option>@foreach(var p in products){<option value="@p.ProductId">@p.ProductName (@p.SKU)</option>}</InputSelect></div>
+            <div class="col-lg-2"><label class="form-label">QUANTITY</label><InputNumber class="form-control" @bind-Value="form.Quantity" /></div>
+            <div class="col-lg-2"><label class="form-label">PURCHASE PRICE</label><InputNumber class="form-control" @bind-Value="form.PurchasePrice" /></div>
+            <div class="col-lg-4"><label class="form-label">SUPPLIER</label><InputText class="form-control" @bind-Value="form.SupplierName" placeholder="Supplier name" /></div>
+            <div class="col-lg-3"><label class="form-label">REFERENCE NO.</label><InputText class="form-control" @bind-Value="form.ReferenceNo" placeholder="Invoice / GRN" /></div>
+            <div class="col-lg-3"><label class="form-label">DATE</label><InputDate class="form-control" @bind-Value="form.StockInDate" /></div>
+            <div class="col-lg-4"><label class="form-label">NOTES</label><InputText class="form-control" @bind-Value="form.Notes" placeholder="Optional notes" /></div>
+            <div class="col-lg-2 d-flex align-items-end"><button class="btn btn-primary w-100" type="submit">Add Stock</button></div>
+        </div>
+    </EditForm>
+</div>
+@if (!string.IsNullOrWhiteSpace(message)){<div class="alert alert-success mb-3">✓ @message</div>}
+
+<div class="table-wrap"><div class="card-head"><h3>Stock History</h3><span>Latest stock entries</span></div><div class="table-responsive"><table class="table"><thead><tr><th>Date</th><th>Product</th><th>Quantity</th><th>Purchase Price</th><th>Supplier</th><th>Reference</th></tr></thead><tbody>
+@foreach(var s in history){<tr><td>@s.StockInDate.ToString("dd MMM yyyy")</td><td><span class="product-name">@s.Product?.ProductName</span></td><td><span class="badge bg-success">+@s.Quantity</span></td><td>Rs. @s.PurchasePrice.ToString("N2")</td><td>@s.SupplierName</td><td>@s.ReferenceNo</td></tr>}
+</tbody></table></div></div>
+
+@code {
+    private List<Product> products=new(); private List<StockIn> history=new(); private StockIn form=new(){StockInDate=DateTime.Now}; private string? message;
+    protected override async Task OnInitializedAsync(){products=await StockService.GetProductsAsync();history=await StockService.GetHistoryAsync();}
+    private async Task Save(){await StockService.AddAsync(form);form=new StockIn{StockInDate=DateTime.Now};message="Stock added successfully.";history=await StockService.GetHistoryAsync();}
+}

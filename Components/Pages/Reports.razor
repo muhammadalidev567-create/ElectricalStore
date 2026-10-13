@@ -1,0 +1,18 @@
+@page "/reports"
+@inject ReportService ReportService
+
+<PageTitle>Reports</PageTitle>
+
+<div class="page-heading"><div><h1>Reports</h1><p>Review inventory and sales performance for any date range.</p></div></div>
+
+<div class="form-card"><div class="section-title">Sales report filters</div><div class="row g-3 align-items-end"><div class="col-md-3"><label class="form-label">FROM</label><InputDate class="form-control" @bind-Value="from" /></div><div class="col-md-3"><label class="form-label">TO</label><InputDate class="form-control" @bind-Value="to" /></div><div class="col-md-3"><button class="btn btn-primary" @onclick="LoadSales">Generate Report</button></div></div></div>
+
+<div class="table-wrap mb-4"><div class="card-head"><h3>Inventory Report</h3><span>@inventory.Count products</span></div><div class="table-responsive"><table class="table"><thead><tr><th>Product</th><th>SKU</th><th>Category</th><th>Stock</th><th>Sold</th><th>Available</th><th>Minimum</th></tr></thead><tbody>@foreach(var x in inventory){<tr><td><span class="product-name">@x.ProductName</span></td><td>@x.SKU</td><td>@x.CategoryName</td><td>@x.TotalStock</td><td>@x.TotalSold</td><td><strong>@x.AvailableStock</strong></td><td>@x.MinimumStock</td></tr>}</tbody></table></div></div>
+
+<div class="table-wrap"><div class="card-head"><h3>Sales Report</h3><span>@sales.Count invoices</span></div><div class="table-responsive"><table class="table"><thead><tr><th>Invoice</th><th>Date</th><th>Customer</th><th>Net Amount</th><th>Payment</th></tr></thead><tbody>@foreach(var s in sales){<tr><td><span class="badge bg-warning">@s.InvoiceNo</span></td><td>@s.SaleDate.ToString("dd MMM yyyy")</td><td>@s.CustomerName</td><td><strong>Rs. @s.NetAmount.ToString("N2")</strong></td><td>@s.PaymentMethod</td></tr>}</tbody></table></div></div>
+
+@code {
+    private List<InventoryRow> inventory=new(); private List<Sale> sales=new(); private DateTime? from=DateTime.Today.AddDays(-30); private DateTime? to=DateTime.Today;
+    protected override async Task OnInitializedAsync(){inventory=await ReportService.InventoryAsync();sales=await ReportService.SalesAsync(from,to);}
+    private async Task LoadSales()=>sales=await ReportService.SalesAsync(from,to);
+}

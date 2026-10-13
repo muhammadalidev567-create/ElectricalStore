@@ -1,0 +1,43 @@
+@inherits LayoutComponentBase
+
+<div class="store-shell">
+    <aside class="store-sidebar">
+        <div class="store-brand">
+            <div class="brand-mark">⚡</div>
+            <div><strong>Voltix</strong><span>Electrical Store</span></div>
+        </div>
+
+        <div class="sidebar-label">MAIN MENU</div>
+        <nav class="store-nav">
+            <NavLink href="/" Match="NavLinkMatch.All"><span class="nav-icon">⌂</span><span>Dashboard</span></NavLink>
+            <NavLink href="/categories"><span class="nav-icon">▦</span><span>Categories</span></NavLink>
+            <NavLink href="/products"><span class="nav-icon">▣</span><span>Products</span></NavLink>
+            <NavLink href="/stock"><span class="nav-icon">＋</span><span>Stock In</span></NavLink>
+            <NavLink href="/inventory"><span class="nav-icon">◫</span><span>Inventory</span></NavLink>
+            <NavLink href="/sales"><span class="nav-icon">▤</span><span>Sales / POS</span></NavLink>
+            <NavLink href="/reports"><span class="nav-icon">▥</span><span>Reports</span></NavLink>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="store-status"><span></span> Store Online</div>
+            <div class="sidebar-help">Electrical Store<br /><small>Management System</small></div>
+        </div>
+    </aside>
+
+    <div class="store-main">
+        <header class="topbar">
+            <div class="topbar-title">
+                <span class="mobile-brand">⚡</span>
+                <div><strong>Electrical Store</strong><small>Management Dashboard</small></div>
+            </div>
+            <div class="topbar-actions">
+                <div class="topbar-date">@DateTime.Now.ToString("ddd, dd MMM yyyy")</div>
+                <div class="avatar">MA</div>
+            </div>
+        </header>
+
+        <main class="page-content">
+            @Body
+        </main>
+    </div>
+</div>

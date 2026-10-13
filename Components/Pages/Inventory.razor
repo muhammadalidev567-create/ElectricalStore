@@ -1,0 +1,12 @@
+@page "/inventory"
+@inject StockService StockService
+
+<PageTitle>Inventory</PageTitle>
+
+<div class="page-heading"><div><h1>Inventory</h1><p>See exactly what is available, sold and running low.</p></div><div><button class="btn btn-secondary" @onclick="Load">↻ Refresh</button></div></div>
+
+<div class="table-wrap"><div class="card-head"><h3>Current Inventory</h3><span>@rows.Count products</span></div><div class="table-responsive"><table class="table"><thead><tr><th>Product</th><th>SKU</th><th>Category</th><th>Total Stock</th><th>Sold</th><th>Available</th><th>Minimum</th><th>Status</th></tr></thead><tbody>
+@foreach(var x in rows){<tr><td><span class="product-name">@x.ProductName</span></td><td>@x.SKU</td><td>@x.CategoryName</td><td>@x.TotalStock @x.Unit</td><td>@x.TotalSold</td><td><strong>@x.AvailableStock</strong></td><td>@x.MinimumStock</td><td>@if(x.AvailableStock<=0){<span class="badge bg-danger">Out of Stock</span>}else if(x.AvailableStock<=x.MinimumStock){<span class="badge bg-warning">Low Stock</span>}else{<span class="badge bg-success">In Stock</span>}</td></tr>}
+</tbody></table></div></div>
+
+@code { private List<InventoryRow> rows=new(); protected override async Task OnInitializedAsync()=>await Load(); private async Task Load()=>rows=await StockService.GetInventoryAsync(); }

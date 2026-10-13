@@ -1,0 +1,39 @@
+@page "/categories"
+@inject CategoryService CategoryService
+
+<PageTitle>Categories</PageTitle>
+
+<div class="page-heading">
+    <div><h1>Categories</h1><p>Organize your electrical products into easy-to-manage groups.</p></div>
+    <div class="heading-actions"><button class="btn btn-secondary" @onclick="ResetForm">+ New Category</button></div>
+</div>
+
+<div class="form-card">
+    <div class="section-title">@(_editing ? "Edit category" : "Add new category")</div>
+    <EditForm Model="form" OnValidSubmit="Save">
+        <DataAnnotationsValidator />
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4"><label class="form-label">CATEGORY NAME</label><InputText class="form-control" @bind-Value="form.CategoryName" placeholder="e.g. Lighting" /></div>
+            <div class="col-md-5"><label class="form-label">DESCRIPTION</label><InputText class="form-control" @bind-Value="form.Description" placeholder="Short description" /></div>
+            <div class="col-md-3"><button class="btn btn-primary w-100" type="submit">@(_editing ? "Update Category" : "Add Category")</button></div>
+        </div>
+    </EditForm>
+</div>
+@if (!string.IsNullOrWhiteSpace(message)) { <div class="alert alert-success mb-3">✓ @message</div> }
+
+<div class="table-wrap">
+    <div class="card-head"><h3>All Categories</h3><span>@categories.Count categories</span></div>
+    <div class="table-responsive"><table class="table"><thead><tr><th>Category</th><th>Description</th><th>Products</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>@foreach (var c in categories){<tr><td><span class="product-name">@c.CategoryName</span></td><td class="muted">@c.Description</td><td>@c.Products.Count</td><td>@if(c.IsActive){<span class="badge bg-success">Active</span>}else{<span class="badge bg-danger">Inactive</span>}</td><td><button class="btn btn-sm btn-outline-primary me-1" @onclick="() => Edit(c)">Edit</button>@if(c.IsActive){<button class="btn btn-sm btn-outline-danger" @onclick="() => Deactivate(c.CategoryId)">Deactivate</button>}</td></tr>}</tbody>
+    </table></div>
+</div>
+
+@code {
+    private List<Category> categories = new(); private Category form = new(); private bool _editing; private string? message;
+    protected override async Task OnInitializedAsync()=>await Load();
+    private async Task Load()=>categories=await CategoryService.GetAllAsync();
+    private void ResetForm(){form=new Category();_editing=false;message=null;}
+    private void Edit(Category c){form=new Category{CategoryId=c.CategoryId,CategoryName=c.CategoryName,Description=c.Description,IsActive=c.IsActive,CreatedAt=c.CreatedAt};_editing=true;}
+    private async Task Save(){if(_editing)await CategoryService.UpdateAsync(form);else await CategoryService.AddAsync(form);form=new Category();_editing=false;message="Category saved successfully.";await Load();}
+    private async Task Deactivate(int id){await CategoryService.DeactivateAsync(id);message="Category deactivated.";await Load();}
+}

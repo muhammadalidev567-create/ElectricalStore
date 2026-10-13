@@ -1,0 +1,54 @@
+@page "/sales"
+@inject SalesService SalesService
+
+<PageTitle>Sales / POS</PageTitle>
+
+<div class="page-heading"><div><h1>Sales / POS</h1><p>Create invoices and sell electrical products with stock validation.</p></div></div>
+
+<div class="pos-layout">
+    <section>
+        <div class="form-card">
+            <div class="section-title">Customer & payment</div>
+            <div class="row g-3">
+                <div class="col-md-5"><label class="form-label">CUSTOMER NAME</label><InputText class="form-control" @bind-Value="sale.CustomerName" placeholder="Walk-in customer" /></div>
+                <div class="col-md-3"><label class="form-label">PHONE</label><InputText class="form-control" @bind-Value="sale.CustomerPhone" placeholder="03xx-xxxxxxx" /></div>
+                <div class="col-md-4"><label class="form-label">PAYMENT METHOD</label><InputSelect class="form-select" @bind-Value="sale.PaymentMethod"><option>Cash</option><option>Bank</option><option>Online</option><option>Credit</option></InputSelect></div>
+            </div>
+        </div>
+
+        <div class="form-card">
+            <div class="d-flex justify-content-between align-items-center"><div class="section-title mb-0">Sale items</div><button class="btn btn-secondary" type="button" @onclick="AddItem">+ Add Product</button></div>
+            <div class="pos-products">
+                @foreach(var item in sale.Items){<div class="pos-line">
+                    <label class="form-label">PRODUCT</label><select class="form-select" @bind="item.ProductId" @bind:after="()=>SetPrice(item)"><option value="0">Select product</option>@foreach(var p in products){<option value="@p.ProductId">@p.ProductName — Rs. @p.SalePrice.ToString("N0")</option>}</select>
+                    <div class="row g-2"><div class="col-5"><label class="form-label">QTY</label><InputNumber class="form-control" @bind-Value="item.Quantity" /></div><div class="col-7"><label class="form-label">UNIT PRICE</label><InputNumber class="form-control" @bind-Value="item.UnitPrice" /></div></div>
+                    <button class="btn btn-sm btn-outline-danger mt-2 w-100" type="button" @onclick="()=>RemoveItem(item)">Remove item</button>
+                </div>}
+            </div>
+        </div>
+
+        @if(!string.IsNullOrWhiteSpace(message)){<div class="alert @(success?"alert-success":"alert-danger") mb-3">@message</div>}
+
+        <div class="table-wrap"><div class="card-head"><h3>Recent Sales</h3><span>Latest 200 invoices</span></div><div class="table-responsive"><table class="table"><thead><tr><th>Invoice</th><th>Date</th><th>Customer</th><th>Total</th><th>Discount</th><th>Net</th><th>Payment</th></tr></thead><tbody>@foreach(var s in recentSales){<tr><td><span class="badge bg-warning">@s.InvoiceNo</span></td><td>@s.SaleDate.ToString("dd MMM, HH:mm")</td><td>@s.CustomerName</td><td>Rs. @s.TotalAmount.ToString("N2")</td><td>Rs. @s.Discount.ToString("N2")</td><td><strong>Rs. @s.NetAmount.ToString("N2")</strong></td><td>@s.PaymentMethod</td></tr>}</tbody></table></div></div>
+    </section>
+
+    <aside class="sale-summary">
+        <h3>Sale Summary</h3>
+        <div class="summary-row"><span>Items</span><strong>@sale.Items.Sum(x=>x.Quantity)</strong></div>
+        <div class="summary-row"><span>Subtotal</span><strong>Rs. @Subtotal.ToString("N2")</strong></div>
+        <div class="summary-row"><span>Discount</span><strong>Rs. @sale.Discount.ToString("N2")</strong></div>
+        <div class="summary-total"><span>Total</span><span>Rs. @NetTotal.ToString("N2")</span></div>
+        <button class="btn btn-primary" type="button" @onclick="CreateSale">Complete Sale →</button>
+    </aside>
+</div>
+
+@code {
+    private List<Product> products=new(); private List<Sale> recentSales=new(); private SaleCreateModel sale=new(); private string? message; private bool success;
+    private decimal Subtotal=>sale.Items.Sum(x=>x.Quantity*Math.Max(0,x.UnitPrice));
+    private decimal NetTotal=>Math.Max(0,Subtotal-sale.Discount);
+    protected override async Task OnInitializedAsync(){products=await SalesService.GetProductsAsync();recentSales=await SalesService.GetSalesAsync();AddItem();}
+    private void AddItem()=>sale.Items.Add(new SaleCreateItem());
+    private void RemoveItem(SaleCreateItem item){sale.Items.Remove(item);if(sale.Items.Count==0)AddItem();}
+    private void SetPrice(SaleCreateItem item){var product=products.FirstOrDefault(x=>x.ProductId==item.ProductId);if(product is not null)item.UnitPrice=product.SalePrice;}
+    private async Task CreateSale(){try{var invoice=await SalesService.CreateSaleAsync(sale);message=$"✓ Sale completed successfully. Invoice: {invoice}";success=true;sale=new SaleCreateModel();AddItem();recentSales=await SalesService.GetSalesAsync();}catch(Exception ex){message=ex.InnerException?.Message??ex.Message;success=false;}}
+}

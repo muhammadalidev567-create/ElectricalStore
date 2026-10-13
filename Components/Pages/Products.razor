@@ -1,0 +1,37 @@
+@page "/products"
+@inject ProductService ProductService
+
+<PageTitle>Products</PageTitle>
+
+<div class="page-heading"><div><h1>Products</h1><p>Manage electrical products, SKUs, prices and minimum stock.</p></div><div class="heading-actions"><button class="btn btn-primary" @onclick="ResetForm">+ Add Product</button></div></div>
+
+<div class="form-card">
+    <div class="section-title">@(_editing ? "Edit product" : "Product details")</div>
+    <EditForm Model="form" OnValidSubmit="Save"><DataAnnotationsValidator />
+        <div class="row g-3">
+            <div class="col-lg-4"><label class="form-label">PRODUCT NAME</label><InputText class="form-control" @bind-Value="form.ProductName" placeholder="e.g. LED Bulb 12W" /></div>
+            <div class="col-lg-2"><label class="form-label">SKU</label><InputText class="form-control" @bind-Value="form.SKU" placeholder="LED-001" /></div>
+            <div class="col-lg-3"><label class="form-label">CATEGORY</label><InputSelect class="form-select" @bind-Value="form.CategoryId"><option value="0">Select category</option>@foreach(var c in categories){<option value="@c.CategoryId">@c.CategoryName</option>}</InputSelect></div>
+            <div class="col-lg-3"><label class="form-label">UNIT</label><InputText class="form-control" @bind-Value="form.Unit" placeholder="Piece / Meter" /></div>
+            <div class="col-lg-3"><label class="form-label">PURCHASE PRICE</label><InputNumber class="form-control" @bind-Value="form.PurchasePrice" /></div>
+            <div class="col-lg-3"><label class="form-label">SALE PRICE</label><InputNumber class="form-control" @bind-Value="form.SalePrice" /></div>
+            <div class="col-lg-3"><label class="form-label">MINIMUM STOCK</label><InputNumber class="form-control" @bind-Value="form.MinimumStock" /></div>
+            <div class="col-lg-3 d-flex align-items-end"><button class="btn btn-primary w-100" type="submit">@(_editing ? "Update Product" : "Save Product")</button></div>
+        </div>
+    </EditForm>
+</div>
+@if (!string.IsNullOrWhiteSpace(message)) { <div class="alert alert-success mb-3">✓ @message</div> }
+
+<div class="table-wrap"><div class="card-head"><h3>Product Catalog</h3><span>@products.Count active products</span></div><div class="table-responsive"><table class="table"><thead><tr><th>Product</th><th>SKU</th><th>Category</th><th>Unit</th><th>Purchase</th><th>Sale Price</th><th>Min</th><th>Actions</th></tr></thead><tbody>
+@foreach(var p in products){<tr><td><span class="product-name">@p.ProductName</span></td><td><span class="badge bg-warning">@p.SKU</span></td><td>@p.Category?.CategoryName</td><td>@p.Unit</td><td>Rs. @p.PurchasePrice.ToString("N2")</td><td><strong>Rs. @p.SalePrice.ToString("N2")</strong></td><td>@p.MinimumStock</td><td><button class="btn btn-sm btn-outline-primary me-1" @onclick="()=>Edit(p)">Edit</button><button class="btn btn-sm btn-outline-danger" @onclick="()=>Deactivate(p.ProductId)">Deactivate</button></td></tr>}
+</tbody></table></div></div>
+
+@code {
+    private List<Product> products=new(); private List<Category> categories=new(); private Product form=new(); private bool _editing; private string? message;
+    protected override async Task OnInitializedAsync(){await Load();categories=await ProductService.GetCategoriesAsync();}
+    private async Task Load()=>products=await ProductService.GetAllAsync();
+    private void ResetForm(){form=new Product{Unit="Piece"};_editing=false;message=null;}
+    private void Edit(Product p){form=new Product{ProductId=p.ProductId,ProductName=p.ProductName,SKU=p.SKU,CategoryId=p.CategoryId,Unit=p.Unit,PurchasePrice=p.PurchasePrice,SalePrice=p.SalePrice,MinimumStock=p.MinimumStock,IsActive=p.IsActive,CreatedAt=p.CreatedAt};_editing=true;}
+    private async Task Save(){if(_editing)await ProductService.UpdateAsync(form);else await ProductService.AddAsync(form);form=new Product{Unit="Piece"};_editing=false;message="Product saved successfully.";await Load();}
+    private async Task Deactivate(int id){await ProductService.DeactivateAsync(id);message="Product deactivated.";await Load();}
+}

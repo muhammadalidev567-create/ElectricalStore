@@ -1,0 +1,55 @@
+@page "/"
+@inject DashboardService DashboardService
+
+<PageTitle>Dashboard</PageTitle>
+
+@if (dashboard is null)
+{
+    <div class="ui-card card-body"><span class="spinner-border spinner-border-sm"></span> Loading dashboard...</div>
+}
+else
+{
+    <div class="dashboard-hero">
+        <h1>Good evening, Muhammad 👋</h1>
+        <p>Here is what's happening in your electrical store today.</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card"><div class="stat-top"><span class="stat-label">TOTAL PRODUCTS</span><span class="stat-icon">▣</span></div><div class="stat-value">@dashboard.TotalProducts</div><div class="stat-foot">Active products</div></div>
+        <div class="stat-card"><div class="stat-top"><span class="stat-label">TOTAL STOCK</span><span class="stat-icon">◫</span></div><div class="stat-value">@dashboard.TotalStock</div><div class="stat-foot">Units received</div></div>
+        <div class="stat-card"><div class="stat-top"><span class="stat-label">TOTAL SOLD</span><span class="stat-icon">↗</span></div><div class="stat-value">@dashboard.TotalSold</div><div class="stat-foot">Units sold</div></div>
+        <div class="stat-card"><div class="stat-top"><span class="stat-label">AVAILABLE</span><span class="stat-icon">✓</span></div><div class="stat-value">@dashboard.AvailableStock</div><div class="stat-foot">Current inventory</div></div>
+        <div class="stat-card"><div class="stat-top"><span class="stat-label">TOTAL SALES</span><span class="stat-icon">₨</span></div><div class="stat-value" style="font-size:19px">Rs. @dashboard.TotalSales.ToString("N0")</div><div class="stat-foot">Net sales</div></div>
+        <div class="stat-card"><div class="stat-top"><span class="stat-label">LOW STOCK</span><span class="stat-icon">!</span></div><div class="stat-value">@dashboard.LowStockProducts</div><div class="stat-foot">Need attention</div></div>
+    </div>
+
+    <div class="content-grid">
+        <section class="ui-card">
+            <div class="card-head"><h3>Store Overview</h3><span>Inventory movement</span></div>
+            <div class="card-body">
+                <div class="bar-chart">
+                    <div class="bar" style="height:42%"><span class="bar-label">Products</span></div>
+                    <div class="bar" style="height:78%"><span class="bar-label">Stock In</span></div>
+                    <div class="bar" style="height:58%"><span class="bar-label">Sold</span></div>
+                    <div class="bar" style="height:66%"><span class="bar-label">Available</span></div>
+                    <div class="bar" style="height:35%"><span class="bar-label">Low</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="ui-card">
+            <div class="card-head"><h3>Store Flow</h3><span>Quick view</span></div>
+            <div class="card-body flow-list">
+                <div class="flow-item"><div class="flow-number">01</div><div><strong>Categories</strong><small>Organize electrical items</small></div></div>
+                <div class="flow-item"><div class="flow-number">02</div><div><strong>Products</strong><small>Manage prices & SKUs</small></div></div>
+                <div class="flow-item"><div class="flow-number">03</div><div><strong>Stock → Sale</strong><small>Track every unit</small></div></div>
+                <div class="flow-item"><div class="flow-number">04</div><div><strong>Reports</strong><small>Monitor your business</small></div></div>
+            </div>
+        </section>
+    </div>
+}
+
+@code {
+    private DashboardModel? dashboard;
+    protected override async Task OnInitializedAsync() => dashboard = await DashboardService.GetAsync();
+}
